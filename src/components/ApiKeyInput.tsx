@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { KeyRound, Save, CheckCircle } from 'lucide-react';
+import { KeyRound, Save, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const ApiKeyInput = () => {
   const [apiKey, setApiKey] = useState('');
   const [isSaved, setIsSaved] = useState(false);
+  const [isValidFormat, setIsValidFormat] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -17,8 +18,14 @@ const ApiKeyInput = () => {
     if (savedKey) {
       setApiKey(savedKey);
       setIsSaved(true);
+      setIsValidFormat(savedKey.startsWith('sk-'));
     }
   }, []);
+
+  // Validate API key format
+  const validateApiKeyFormat = (key: string) => {
+    return key.startsWith('sk-');
+  };
 
   const handleSaveKey = () => {
     if (!apiKey.trim()) {
@@ -28,6 +35,17 @@ const ApiKeyInput = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    const isValid = validateApiKeyFormat(apiKey.trim());
+    setIsValidFormat(isValid);
+
+    if (!isValid) {
+      toast({
+        title: "Warning",
+        description: "The API key format doesn't look right. DeepSeek API keys typically start with 'sk-'. Saving anyway.",
+        variant: "warning",
+      });
     }
 
     localStorage.setItem('deepseek_api_key', apiKey.trim());
@@ -51,21 +69,34 @@ const ApiKeyInput = () => {
         </p>
         
         <div className="flex gap-2">
-          <Input
-            type="password"
-            value={apiKey}
-            onChange={(e) => {
-              setApiKey(e.target.value);
-              if (isSaved) setIsSaved(false);
-            }}
-            placeholder="Enter your DeepSeek API key..."
-            className="font-mono"
-          />
-          <Button onClick={handleSaveKey} variant="outline" className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Input
+              type="password"
+              value={apiKey}
+              onChange={(e) => {
+                const newKey = e.target.value;
+                setApiKey(newKey);
+                setIsValidFormat(validateApiKeyFormat(newKey));
+                if (isSaved) setIsSaved(false);
+              }}
+              placeholder="Enter your DeepSeek API key..."
+              className={`font-mono ${!isValidFormat && apiKey ? 'border-orange-400' : ''}`}
+            />
+            {!isValidFormat && apiKey && (
+              <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-orange-500" />
+            )}
+          </div>
+          <Button onClick={handleSaveKey} variant="outline" className="flex items-center gap-2 whitespace-nowrap">
             {isSaved ? <CheckCircle className="h-4 w-4" /> : <Save className="h-4 w-4" />}
             {isSaved ? 'Saved' : 'Save Key'}
           </Button>
         </div>
+        
+        {!isValidFormat && apiKey && (
+          <p className="text-xs text-orange-500">
+            This key format doesn't match the expected pattern (should start with 'sk-'). You can still save it, but it might not work.
+          </p>
+        )}
         
         <p className="text-xs text-muted-foreground">
           Your API key is stored only in your browser's localStorage and is never sent to our servers.

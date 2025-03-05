@@ -11,11 +11,16 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
     // Get DeepSeek API key from localStorage
     const apiKey = localStorage.getItem('deepseek_api_key');
     
+    // Check if API key exists and has valid format
     if (!apiKey) {
-      throw new Error("API key not found. Please enter your DeepSeek API key.");
+      throw new Error("API key not found. Please enter your DeepSeek API key in the form above.");
     }
 
-    console.log("Making API request to DeepSeek...");
+    if (!apiKey.startsWith('sk-')) {
+      throw new Error("The API key format appears invalid. DeepSeek API keys typically start with 'sk-'.");
+    }
+
+    console.log("Making API request to DeepSeek with API key:", apiKey.substring(0, 10) + "...");
     
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -24,7 +29,7 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "Text To SQL", // Updated to use the correct model name
+        model: "Text To SQL", // Using the correct model name
         messages: [
           {
             role: "system",
@@ -46,7 +51,15 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
     if (!response.ok) {
       const error = await response.json();
       console.error("DeepSeek API error:", error);
-      throw new Error(error.error?.message || "Failed to generate SQL");
+      
+      // Provide more helpful error messages based on status codes
+      if (response.status === 401) {
+        throw new Error("Authentication failed. Please check that your DeepSeek API key is valid and has access to 'Text To SQL' model.");
+      } else if (response.status === 404) {
+        throw new Error("Model 'Text To SQL' not found. Please verify the model name or check your DeepSeek account for available models.");
+      } else {
+        throw new Error(error.error?.message || "Failed to generate SQL");
+      }
     }
 
     const data = await response.json();
