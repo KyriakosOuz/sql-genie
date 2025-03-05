@@ -24,7 +24,7 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "deepseek-coder-v1", // Try with the fully qualified model name
+        model: "Text To SQL", // Updated to use the correct model name
         messages: [
           {
             role: "system",
