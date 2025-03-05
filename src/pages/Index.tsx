@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { generateSql, getApiConfig } from '@/services/openaiService';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const Index = () => {
   const [schema, setSchema] = useState('');
@@ -15,19 +17,76 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiKeyMissing, setApiKeyMissing] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Check if API key exists on component mount
   useEffect(() => {
     const { apiKey } = getApiConfig();
     setApiKeyMissing(!apiKey);
-  }, []);
+    
+    // If user is logged in, try to get their last used schema
+    if (user) {
+      fetchLastSchema();
+    }
+  }, [user]);
 
-  const handleSchemaUpload = (uploadedSchema: string) => {
+  // Fetch user's last used schema
+  const fetchLastSchema = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('uploaded_schemas')
+        .select('schema_sql')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setSchema(data[0].schema_sql);
+        toast({
+          title: "Schema loaded",
+          description: "Your last used schema has been loaded",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching last schema:", error);
+    }
+  };
+
+  const handleSchemaUpload = async (uploadedSchema: string, schemaName: string = "Uploaded Schema") => {
     setSchema(uploadedSchema);
     toast({
       title: "Schema uploaded",
       description: "Your database schema has been loaded successfully",
     });
+    
+    // Save schema to Supabase if user is logged in
+    if (user) {
+      try {
+        const { error } = await supabase
+          .from('uploaded_schemas')
+          .insert({
+            user_id: user.id,
+            name: schemaName,
+            schema_sql: uploadedSchema,
+          });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Schema saved",
+          description: "Your schema has been saved to your account",
+        });
+      } catch (error) {
+        console.error("Error saving schema:", error);
+        toast({
+          title: "Error saving schema",
+          description: error instanceof Error ? error.message : "Failed to save schema",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const handleQuerySubmit = async (query: string) => {
@@ -68,6 +127,29 @@ const Index = () => {
         title: "SQL Generated",
         description: "Your query has been converted to SQL successfully",
       });
+      
+      // Save query to Supabase if user is logged in
+      if (user) {
+        try {
+          const { error } = await supabase
+            .from('queries')
+            .insert({
+              user_id: user.id,
+              prompt: query,
+              sql_result: generatedSql,
+              schema: schema
+            });
+          
+          if (error) throw error;
+          
+          toast({
+            title: "Query saved",
+            description: "Your query and result have been saved to your account",
+          });
+        } catch (error) {
+          console.error("Error saving query:", error);
+        }
+      }
     } catch (error) {
       console.error("Error in handleQuerySubmit:", error);
       // Check if error is related to API key
@@ -103,7 +185,7 @@ const Index = () => {
             </Alert>
           )}
           
-          <SchemaUploader onSchemaUpload={handleSchemaUpload} />
+          <SchemaUploader onSchemaUpload={handleSchemaUpload} initialSchema={schema} />
           <QueryInput onQuerySubmit={handleQuerySubmit} isLoading={isLoading} />
           <SqlOutput sql={sql} />
         </div>
