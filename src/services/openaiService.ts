@@ -15,6 +15,8 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
       throw new Error("API key not found. Please enter your DeepSeek API key.");
     }
 
+    console.log("Making API request to DeepSeek...");
+    
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -22,7 +24,7 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "deepseek-chat", // Changed to deepseek-chat model
+        model: "deepseek-coder-v1", // Try with the fully qualified model name
         messages: [
           {
             role: "system",
@@ -38,8 +40,12 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
       })
     });
 
+    // Log response status for debugging
+    console.log("DeepSeek API response status:", response.status);
+    
     if (!response.ok) {
       const error = await response.json();
+      console.error("DeepSeek API error:", error);
       throw new Error(error.error?.message || "Failed to generate SQL");
     }
 
