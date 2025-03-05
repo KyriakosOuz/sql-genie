@@ -22,7 +22,7 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "deepseek-coder", // Using DeepSeek's coding model
+        model: "deepseek-chat", // Changed to deepseek-chat model
         messages: [
           {
             role: "system",
