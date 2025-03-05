@@ -44,7 +44,7 @@ const ApiKeyInput = () => {
       toast({
         title: "Warning",
         description: "The API key format doesn't look right. DeepSeek API keys typically start with 'sk-'. Saving anyway.",
-        variant: "warning",
+        variant: "default", // Changed from "warning" to "default"
       });
     }
 
