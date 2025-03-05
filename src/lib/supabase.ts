@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // Get Supabase URL and anon key from environment variables
 // These should be set in the Lovable project settings
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://dhnwitfjetzotntxzhjm.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://uugdlxzevfyodglfrxdb.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1Z2RseHpldmZ5b2RnbGZyeGRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMTgxMTEsImV4cCI6MjA1Njc5NDExMX0.MRuNyTt64GX_O4i0pKeCvsQ186hDVnFLnFnR99YsNbc';
 
 // Check if valid Supabase credentials are provided
 const hasValidCredentials = 
