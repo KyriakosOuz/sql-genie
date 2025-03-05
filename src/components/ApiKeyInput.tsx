@@ -16,7 +16,7 @@ const ApiKeyInput = () => {
 
   useEffect(() => {
     // Check if API key exists in localStorage based on selected provider
-    const storageKey = apiProvider === 'deepseek' ? 'deepseek_api_key' : 'openrouter_api_key';
+    const storageKey = getStorageKeyForProvider(apiProvider);
     const savedKey = localStorage.getItem(storageKey);
     
     if (savedKey) {
@@ -31,13 +31,24 @@ const ApiKeyInput = () => {
     }
   }, [apiProvider]);
 
+  // Get the appropriate localStorage key based on provider
+  const getStorageKeyForProvider = (provider: string) => {
+    switch(provider) {
+      case 'deepseek': return 'deepseek_api_key';
+      case 'openrouter': return 'openrouter_api_key';
+      case 'mistral': return 'mistral_api_key';
+      default: return 'deepseek_api_key';
+    }
+  };
+
   // Validate API key format based on provider
   const validateApiKeyFormat = (key: string, provider: string) => {
     if (!key) return true;
-    if (provider === 'deepseek') {
-      return key.startsWith('sk-');
+    
+    if (provider === 'mistral') {
+      return key.startsWith('mis_'); // Mistral API keys typically start with mis_
     } else {
-      // OpenRouter keys typically start with sk- as well
+      // DeepSeek and OpenRouter keys typically start with sk-
       return key.startsWith('sk-');
     }
   };
@@ -56,23 +67,39 @@ const ApiKeyInput = () => {
     setIsValidFormat(isValid);
 
     if (!isValid) {
+      let warningMessage = "";
+      if (apiProvider === 'mistral') {
+        warningMessage = "Mistral AI API keys typically start with 'mis_'.";
+      } else {
+        warningMessage = `${apiProvider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API keys typically start with 'sk-'.`;
+      }
+      
       toast({
         title: "Warning",
-        description: `The API key format doesn't look right. ${apiProvider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API keys typically start with 'sk-'. Saving anyway.`,
-        variant: "default", // Changed from "warning" to "default"
+        description: `The API key format doesn't look right. ${warningMessage} Saving anyway.`,
+        variant: "default",
       });
     }
 
     // Save to the appropriate localStorage key based on provider
-    const storageKey = apiProvider === 'deepseek' ? 'deepseek_api_key' : 'openrouter_api_key';
+    const storageKey = getStorageKeyForProvider(apiProvider);
     localStorage.setItem(storageKey, apiKey.trim());
     localStorage.setItem('active_api_provider', apiProvider);
     setIsSaved(true);
     
     toast({
       title: "Success",
-      description: `${apiProvider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API key saved successfully`,
+      description: `API key saved successfully for ${apiProvider === 'deepseek' ? 'DeepSeek' : apiProvider === 'openrouter' ? 'OpenRouter' : 'Mistral AI'}`,
     });
+  };
+
+  const getProviderDisplayName = (provider: string) => {
+    switch(provider) {
+      case 'deepseek': return 'DeepSeek';
+      case 'openrouter': return 'OpenRouter';
+      case 'mistral': return 'Mistral AI';
+      default: return provider;
+    }
   };
 
   return (
@@ -84,9 +111,10 @@ const ApiKeyInput = () => {
         </div>
         
         <Tabs defaultValue="deepseek" onValueChange={setApiProvider} value={apiProvider}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="deepseek">DeepSeek</TabsTrigger>
             <TabsTrigger value="openrouter">OpenRouter</TabsTrigger>
+            <TabsTrigger value="mistral">Mistral AI</TabsTrigger>
           </TabsList>
           
           <TabsContent value="deepseek" className="space-y-4">
@@ -98,6 +126,12 @@ const ApiKeyInput = () => {
           <TabsContent value="openrouter" className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Enter your OpenRouter API key as an alternative to DeepSeek. Your key is stored locally in your browser.
+            </p>
+          </TabsContent>
+
+          <TabsContent value="mistral" className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Enter your Mistral AI API key as another option for SQL generation. Your key is stored locally in your browser.
             </p>
           </TabsContent>
         </Tabs>
@@ -113,7 +147,7 @@ const ApiKeyInput = () => {
                 setIsValidFormat(validateApiKeyFormat(newKey, apiProvider));
                 if (isSaved) setIsSaved(false);
               }}
-              placeholder={`Enter your ${apiProvider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API key...`}
+              placeholder={`Enter your ${getProviderDisplayName(apiProvider)} API key...`}
               className={`font-mono ${!isValidFormat && apiKey ? 'border-orange-400' : ''}`}
             />
             {!isValidFormat && apiKey && (
@@ -128,7 +162,9 @@ const ApiKeyInput = () => {
         
         {!isValidFormat && apiKey && (
           <p className="text-xs text-orange-500">
-            This key format doesn't match the expected pattern (should start with 'sk-'). You can still save it, but it might not work.
+            {apiProvider === 'mistral' 
+              ? "This key format doesn't match the expected pattern (should start with 'mis_'). You can still save it, but it might not work."
+              : "This key format doesn't match the expected pattern (should start with 'sk-'). You can still save it, but it might not work."}
           </p>
         )}
         

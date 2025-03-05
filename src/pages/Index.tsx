@@ -34,11 +34,16 @@ const Index = () => {
     // Check if API key exists before making the request
     const { apiKey, provider } = getApiConfig();
     
+    // Get provider display name for messages
+    const providerDisplayName = 
+      provider === 'deepseek' ? 'DeepSeek' : 
+      provider === 'openrouter' ? 'OpenRouter' : 'Mistral AI';
+    
     if (!apiKey) {
       setApiKeyMissing(true);
       toast({
         title: "API Key Missing",
-        description: `Please enter your ${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API key above`,
+        description: `Please enter your ${providerDisplayName} API key above`,
         variant: "destructive",
       });
       return;
