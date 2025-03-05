@@ -8,22 +8,21 @@ interface GenerateSqlParams {
 
 export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise<string> => {
   try {
-    // This would typically call an API endpoint
-    // For demo purposes, we're using a direct fetch to OpenAI API
-    const apiKey = localStorage.getItem('openai_api_key');
+    // Get DeepSeek API key from localStorage
+    const apiKey = localStorage.getItem('deepseek_api_key');
     
     if (!apiKey) {
-      throw new Error("API key not found. Please enter your OpenAI API key.");
+      throw new Error("API key not found. Please enter your DeepSeek API key.");
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "deepseek-coder", // Using DeepSeek's coding model
         messages: [
           {
             role: "system",

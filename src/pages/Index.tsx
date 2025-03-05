@@ -55,7 +55,7 @@ const Index = () => {
         <div className="text-center space-y-4 mb-12">
           <h1 className="text-4xl font-bold tracking-tight">SQL Query Generator</h1>
           <p className="text-lg text-muted-foreground">
-            Transform natural language into SQL queries powered by AI
+            Transform natural language into SQL queries powered by DeepSeek AI
           </p>
         </div>
 

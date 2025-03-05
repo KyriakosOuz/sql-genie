@@ -13,7 +13,7 @@ const ApiKeyInput = () => {
 
   useEffect(() => {
     // Check if API key exists in localStorage
-    const savedKey = localStorage.getItem('openai_api_key');
+    const savedKey = localStorage.getItem('deepseek_api_key');
     if (savedKey) {
       setApiKey(savedKey);
       setIsSaved(true);
@@ -30,11 +30,11 @@ const ApiKeyInput = () => {
       return;
     }
 
-    localStorage.setItem('openai_api_key', apiKey.trim());
+    localStorage.setItem('deepseek_api_key', apiKey.trim());
     setIsSaved(true);
     toast({
       title: "Success",
-      description: "API key saved successfully",
+      description: "DeepSeek API key saved successfully",
     });
   };
 
@@ -43,11 +43,11 @@ const ApiKeyInput = () => {
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <KeyRound className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">OpenAI API Key</h3>
+          <h3 className="text-lg font-semibold">DeepSeek API Key</h3>
         </div>
         
         <p className="text-sm text-muted-foreground">
-          Enter your OpenAI API key to enable SQL generation. Your key is stored locally in your browser.
+          Enter your DeepSeek API key to enable SQL generation. Your key is stored locally in your browser.
         </p>
         
         <div className="flex gap-2">
@@ -58,7 +58,7 @@ const ApiKeyInput = () => {
               setApiKey(e.target.value);
               if (isSaved) setIsSaved(false);
             }}
-            placeholder="sk-..."
+            placeholder="Enter your DeepSeek API key..."
             className="font-mono"
           />
           <Button onClick={handleSaveKey} variant="outline" className="flex items-center gap-2">
