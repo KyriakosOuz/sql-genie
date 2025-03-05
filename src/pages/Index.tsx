@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SchemaUploader from '@/components/SchemaUploader';
 import QueryInput from '@/components/QueryInput';
@@ -9,7 +8,7 @@ import { generateSql, getApiConfig } from '@/services/openaiService';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 const Index = () => {
   const [schema, setSchema] = useState('');
@@ -24,14 +23,16 @@ const Index = () => {
     const { apiKey } = getApiConfig();
     setApiKeyMissing(!apiKey);
     
-    // If user is logged in, try to get their last used schema
-    if (user) {
+    // If user is logged in and Supabase is configured, try to get their last used schema
+    if (user && isSupabaseConfigured) {
       fetchLastSchema();
     }
   }, [user]);
 
   // Fetch user's last used schema
   const fetchLastSchema = async () => {
+    if (!isSupabaseConfigured) return;
+    
     try {
       const { data, error } = await supabase
         .from('uploaded_schemas')
@@ -61,8 +62,8 @@ const Index = () => {
       description: "Your database schema has been loaded successfully",
     });
     
-    // Save schema to Supabase if user is logged in
-    if (user) {
+    // Save schema to Supabase if user is logged in and Supabase is configured
+    if (user && isSupabaseConfigured) {
       try {
         const { error } = await supabase
           .from('uploaded_schemas')
@@ -128,8 +129,8 @@ const Index = () => {
         description: "Your query has been converted to SQL successfully",
       });
       
-      // Save query to Supabase if user is logged in
-      if (user) {
+      // Save query to Supabase if user is logged in and Supabase is configured
+      if (user && isSupabaseConfigured) {
         try {
           const { error } = await supabase
             .from('queries')

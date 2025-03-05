@@ -1,9 +1,11 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface AuthContextType {
   session: Session | null;
@@ -25,6 +27,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -43,6 +50,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      toast({
+        title: "Auth Disabled",
+        description: "Supabase authentication is not configured",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -152,6 +168,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signInWithGithub,
       loading
     }}>
+      {!isSupabaseConfigured && (
+        <div className="container my-4">
+          <Alert variant="warning">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Supabase Not Configured</AlertTitle>
+            <AlertDescription>
+              The app is running in demo mode without Supabase integration. User accounts, saving queries, and other features are disabled.
+              To enable these features, connect your Supabase project in the Lovable project settings.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
