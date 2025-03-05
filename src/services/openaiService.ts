@@ -41,9 +41,9 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
     }
 
     // Check API key format based on provider
-    const hasValidFormat = provider === 'mistral' ? apiKey.startsWith('mis_') : apiKey.startsWith('sk-');
+    const hasValidFormat = provider === 'mistral' ? true : apiKey.startsWith('sk-');
     if (!hasValidFormat) {
-      const expectedPrefix = provider === 'mistral' ? "'mis_'" : "'sk-'";
+      const expectedPrefix = "'sk-'";
       throw new Error(`The API key format appears invalid. ${providerDisplayName} API keys typically start with ${expectedPrefix}.`);
     }
 

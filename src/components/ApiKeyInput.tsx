@@ -44,9 +44,9 @@ const ApiKeyInput = () => {
   // Validate API key format based on provider
   const validateApiKeyFormat = (key: string, provider: string) => {
     if (!key) return true;
-    
+    // Only validate DeepSeek and OpenRouter keys
     if (provider === 'mistral') {
-      return key.startsWith('mis_'); // Mistral API keys typically start with mis_
+      return true; // No format validation for Mistral keys
     } else {
       // DeepSeek and OpenRouter keys typically start with sk-
       return key.startsWith('sk-');
