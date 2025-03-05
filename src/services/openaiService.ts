@@ -6,29 +6,42 @@ interface GenerateSqlParams {
   schema: string;
 }
 
+// Helper function to get the API key and provider
+export const getApiConfig = () => {
+  // Check which provider is active
+  const activeProvider = localStorage.getItem('active_api_provider') || 'deepseek';
+  
+  // Get the appropriate API key
+  const apiKey = localStorage.getItem(
+    activeProvider === 'deepseek' ? 'deepseek_api_key' : 'openrouter_api_key'
+  );
+  
+  return { apiKey, provider: activeProvider };
+};
+
 export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise<string> => {
   try {
-    // Get DeepSeek API key from localStorage
-    const apiKey = localStorage.getItem('deepseek_api_key');
+    // Get API configuration
+    const { apiKey, provider } = getApiConfig();
     
-    // Check if API key exists and has valid format
+    // Check if API key exists
     if (!apiKey) {
-      throw new Error("API key not found. Please enter your DeepSeek API key in the form above.");
+      throw new Error(`API key not found. Please enter your ${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API key in the form above.`);
     }
 
+    // Check API key format
     if (!apiKey.startsWith('sk-')) {
-      throw new Error("The API key format appears invalid. DeepSeek API keys typically start with 'sk-'.");
+      throw new Error(`The API key format appears invalid. ${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API keys typically start with 'sk-'.`);
     }
 
-    console.log("Making API request to DeepSeek with API key:", apiKey.substring(0, 10) + "...");
+    console.log(`Making API request to ${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} with API key:`, apiKey.substring(0, 10) + "...");
     
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
+    // Prepare API request based on the provider
+    let endpoint, body;
+    
+    if (provider === 'deepseek') {
+      endpoint = 'https://api.deepseek.com/v1/chat/completions';
+      body = JSON.stringify({
         model: "Text To SQL", // Using the correct model name
         messages: [
           {
@@ -42,29 +55,60 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
         ],
         temperature: 0.1,
         max_tokens: 500
-      })
+      });
+    } else {
+      // OpenRouter config
+      endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+      body = JSON.stringify({
+        model: "gpt-4-turbo", // A recommended model from OpenRouter
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert SQL developer. Your task is to convert a natural language query into valid SQL based on the provided database schema. Only return the SQL query without any explanations or markdown."
+          },
+          {
+            role: "user",
+            content: `Database Schema:\n${schema}\n\nNatural Language Query: ${query}\n\nGenerate a SQL query for this request.`
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 500
+      });
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body
     });
 
     // Log response status for debugging
-    console.log("DeepSeek API response status:", response.status);
+    console.log(`${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API response status:`, response.status);
     
     if (!response.ok) {
       const error = await response.json();
-      console.error("DeepSeek API error:", error);
+      console.error(`${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API error:`, error);
       
       // Provide more helpful error messages based on status codes
       if (response.status === 401) {
-        throw new Error("Authentication failed. Please check that your DeepSeek API key is valid and has access to 'Text To SQL' model.");
-      } else if (response.status === 404) {
+        throw new Error(`Authentication failed. Please check that your ${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API key is valid.`);
+      } else if (response.status === 404 && provider === 'deepseek') {
         throw new Error("Model 'Text To SQL' not found. Please verify the model name or check your DeepSeek account for available models.");
       } else {
-        throw new Error(error.error?.message || "Failed to generate SQL");
+        throw new Error(error.error?.message || `Failed to generate SQL using ${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'}`);
       }
     }
 
     const data = await response.json();
+    
     // Extract just the SQL from the response
-    const sqlContent = data.choices[0].message.content.trim();
+    // The response format might be different between providers
+    const sqlContent = provider === 'deepseek' 
+      ? data.choices[0].message.content.trim()
+      : data.choices[0].message.content.trim();
     
     // Remove any markdown code blocks if present
     const cleanedSql = sqlContent.replace(/```sql|```/g, '').trim();
