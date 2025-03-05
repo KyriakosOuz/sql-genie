@@ -97,18 +97,24 @@ export const generateSql = async ({ query, schema }: GenerateSqlParams): Promise
         throw new Error(`Authentication failed. Please check that your ${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'} API key is valid.`);
       } else if (response.status === 404 && provider === 'deepseek') {
         throw new Error("Model 'Text To SQL' not found. Please verify the model name or check your DeepSeek account for available models.");
+      } else if (response.status === 402) {
+        throw new Error("Payment required. Your account may need credits or has exceeded token limits.");
       } else {
         throw new Error(error.error?.message || `Failed to generate SQL using ${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'}`);
       }
     }
 
     const data = await response.json();
+    console.log("API response data:", data); // Add this to debug the response structure
+    
+    // Handle case where data.choices is undefined or empty
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error(`No response received from ${provider === 'deepseek' ? 'DeepSeek' : 'OpenRouter'}. Please try again.`);
+    }
     
     // Extract just the SQL from the response
     // The response format might be different between providers
-    const sqlContent = provider === 'deepseek' 
-      ? data.choices[0].message.content.trim()
-      : data.choices[0].message.content.trim();
+    const sqlContent = data.choices[0].message.content.trim();
     
     // Remove any markdown code blocks if present
     const cleanedSql = sqlContent.replace(/```sql|```/g, '').trim();
