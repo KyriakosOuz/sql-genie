@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Copy, Database, Table } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Database, Download, Table } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UploadedSchema } from '@/lib/supabase';
 
@@ -17,18 +16,15 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({ schema }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Function to extract table names from schema SQL
   const extractTables = (sql: string): { name: string, definition: string }[] => {
     const tables: { name: string, definition: string }[] = [];
     
-    // Basic regex to find CREATE TABLE statements
-    // This is a simple implementation and might need refinement for complex schemas
     const tableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:"?(\w+)"?\.)?(?:"?(\w+)"?)\s*\(([\s\S]*?)(?:\);)/gi;
     
     let match;
     while ((match = tableRegex.exec(sql)) !== null) {
-      const tableName = match[2] || match[1]; // Get the table name
-      const tableDefinition = match[0]; // Get the entire CREATE TABLE statement
+      const tableName = match[2] || match[1];
+      const tableDefinition = match[0];
       
       if (tableName) {
         tables.push({
@@ -53,6 +49,25 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({ schema }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const downloadSchema = () => {
+    const blob = new Blob([schema.schema_sql], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${schema.name.replace(/\s+/g, '_')}_schema.sql`;
+    document.body.appendChild(a);
+    a.click();
+    
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export successful",
+      description: `Schema "${schema.name}" has been downloaded`,
+    });
+  };
+
   return (
     <Card className="overflow-hidden mb-4">
       <CardHeader className="bg-muted/50">
@@ -68,6 +83,15 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({ schema }) => {
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={downloadSchema}
+              className="flex items-center gap-1"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -121,7 +145,6 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({ schema }) => {
   );
 };
 
-// Component to display a single table from a schema
 const SchemaTable = ({ table }: { table: { name: string, definition: string } }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   

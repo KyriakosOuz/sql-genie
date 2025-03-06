@@ -1,10 +1,12 @@
 
 import React from 'react';
-import { FileCode, Loader2 } from 'lucide-react';
+import { FileCode, Loader2, Copy, Check } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
 import { Query } from '@/lib/supabase';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useToast } from '@/hooks/use-toast';
 
 interface QueriesTabProps {
   queries: Query[];
@@ -44,29 +46,66 @@ const QueriesTab: React.FC<QueriesTabProps> = ({ queries, loading, searchTerm })
   return (
     <div className="space-y-4 pt-4">
       {filteredQueries.map((query) => (
-        <Card key={query.id} className="overflow-hidden">
-          <CardHeader className="bg-muted/50">
+        <QueryCard key={query.id} query={query} />
+      ))}
+    </div>
+  );
+};
+
+// Separate component for each query card
+const QueryCard = ({ query }: { query: Query }) => {
+  const { toast } = useToast();
+  const [copied, setCopied] = React.useState(false);
+
+  const copyToClipboard = async () => {
+    await navigator.clipboard.writeText(query.sql_result);
+    setCopied(true);
+    toast({
+      title: "Copied to clipboard",
+      description: "SQL query has been copied to your clipboard",
+    });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-muted/50">
+        <div className="flex justify-between items-start">
+          <div>
             <CardTitle className="text-lg">{query.prompt}</CardTitle>
             <CardDescription>
               {new Date(query.created_at).toLocaleString()}
             </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4">
-            <SyntaxHighlighter 
-              language="sql" 
-              style={vscDarkPlus}
-              customStyle={{ 
-                margin: 0, 
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem' 
-              }}
-            >
-              {query.sql_result}
-            </SyntaxHighlighter>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={copyToClipboard}
+            className="flex items-center gap-1"
+          >
+            {copied ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+            {copied ? 'Copied!' : 'Copy'}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4">
+        <SyntaxHighlighter 
+          language="sql" 
+          style={vscDarkPlus}
+          customStyle={{ 
+            margin: 0, 
+            borderRadius: '0.375rem',
+            fontSize: '0.875rem' 
+          }}
+        >
+          {query.sql_result}
+        </SyntaxHighlighter>
+      </CardContent>
+    </Card>
   );
 };
 
