@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FileCode, Loader2, Copy, Check } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -93,18 +92,9 @@ const QueryCard = ({ query }: { query: Query }) => {
         </div>
       </CardHeader>
       <CardContent className="p-4">
-        <SyntaxHighlighter 
-          language="sql" 
-          style={vscDarkPlus}
-          customStyle={{ 
-            margin: 0, 
-            borderRadius: '0.375rem',
-            fontSize: '0.875rem',
-            background: 'transparent'
-          }}
-        >
-          {query.sql_result}
-        </SyntaxHighlighter>
+        <pre className="bg-code-background text-code-foreground p-4 rounded-lg overflow-x-auto">
+          <code className="font-mono text-sm">{query.sql_result}</code>
+        </pre>
       </CardContent>
     </Card>
   );
