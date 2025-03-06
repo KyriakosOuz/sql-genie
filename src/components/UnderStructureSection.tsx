@@ -22,7 +22,7 @@ const UnderStructureSection: React.FC<UnderStructureSectionProps> = ({ sql }) =>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert variant="outline" className="border-primary/30 bg-primary/5">
+        <Alert variant="default" className="border-primary/30 bg-primary/5">
           <AlertCircle className="h-4 w-4 text-primary" />
           <AlertDescription className="text-sm text-foreground">
             These features are currently under development and will be available soon.
