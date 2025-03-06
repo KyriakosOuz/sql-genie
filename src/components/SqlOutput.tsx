@@ -4,6 +4,8 @@ import { Check, Copy } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface SqlOutputProps {
   sql: string;
@@ -41,9 +43,18 @@ const SqlOutput = ({ sql }: SqlOutputProps) => {
           {copied ? 'Copied!' : 'Copy'}
         </Button>
       </div>
-      <pre className="bg-code-background text-code-foreground p-4 rounded-lg overflow-x-auto">
-        <code className="font-mono text-sm">{sql || 'No SQL generated yet'}</code>
-      </pre>
+      <SyntaxHighlighter 
+        language="sql" 
+        style={vscDarkPlus}
+        customStyle={{ 
+          margin: 0, 
+          borderRadius: '0.375rem',
+          fontSize: '0.875rem',
+          background: 'transparent'
+        }}
+      >
+        {sql || 'No SQL generated yet'}
+      </SyntaxHighlighter>
     </Card>
   );
 };

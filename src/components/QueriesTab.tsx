@@ -99,7 +99,8 @@ const QueryCard = ({ query }: { query: Query }) => {
           customStyle={{ 
             margin: 0, 
             borderRadius: '0.375rem',
-            fontSize: '0.875rem' 
+            fontSize: '0.875rem',
+            background: 'transparent'
           }}
         >
           {query.sql_result}
