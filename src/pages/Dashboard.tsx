@@ -2,14 +2,15 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
 import { Query, UploadedSchema } from '@/lib/supabase';
-import { Download, FileCode, Loader2, RefreshCw, Search } from 'lucide-react';
+import { Download, Loader2, RefreshCw, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import QueriesTab from '@/components/QueriesTab';
+import SchemasTab from '@/components/SchemasTab';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -127,20 +128,6 @@ const Dashboard = () => {
     return <Navigate to="/login" />;
   }
 
-  const filteredQueries = searchTerm 
-    ? queries.filter(q => 
-        q.prompt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.sql_result.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : queries;
-
-  const filteredSchemas = searchTerm
-    ? schemas.filter(s => 
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.schema_sql.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : schemas;
-
   return (
     <div className="container py-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -192,74 +179,20 @@ const Dashboard = () => {
             <TabsTrigger value="schemas">Schemas</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="queries" className="space-y-4 pt-4">
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : filteredQueries.length > 0 ? (
-              filteredQueries.map((query) => (
-                <Card key={query.id} className="overflow-hidden">
-                  <CardHeader className="bg-muted/50">
-                    <CardTitle className="text-lg">{query.prompt}</CardTitle>
-                    <CardDescription>
-                      {new Date(query.created_at).toLocaleString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <div className="bg-code-background text-code-foreground p-4 rounded-lg overflow-x-auto">
-                      <code className="font-mono text-sm">
-                        {query.sql_result}
-                      </code>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-12 border rounded-md">
-                <FileCode className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-medium">No queries found</h3>
-                <p className="text-muted-foreground mt-2">
-                  {searchTerm ? "Try a different search term" : "You haven't saved any queries yet"}
-                </p>
-              </div>
-            )}
+          <TabsContent value="queries">
+            <QueriesTab 
+              queries={queries} 
+              loading={loading} 
+              searchTerm={searchTerm} 
+            />
           </TabsContent>
 
-          <TabsContent value="schemas" className="space-y-4 pt-4">
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : filteredSchemas.length > 0 ? (
-              filteredSchemas.map((schema) => (
-                <Card key={schema.id} className="overflow-hidden">
-                  <CardHeader className="bg-muted/50">
-                    <CardTitle className="text-lg">{schema.name}</CardTitle>
-                    <CardDescription>
-                      {new Date(schema.created_at).toLocaleString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <div className="bg-code-background text-code-foreground p-4 rounded-lg overflow-x-auto">
-                      <code className="font-mono text-sm">
-                        {schema.schema_sql.length > 300 
-                          ? schema.schema_sql.substring(0, 300) + '...' 
-                          : schema.schema_sql}
-                      </code>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-12 border rounded-md">
-                <FileCode className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-medium">No schemas found</h3>
-                <p className="text-muted-foreground mt-2">
-                  {searchTerm ? "Try a different search term" : "You haven't uploaded any schemas yet"}
-                </p>
-              </div>
-            )}
+          <TabsContent value="schemas">
+            <SchemasTab 
+              schemas={schemas} 
+              loading={loading} 
+              searchTerm={searchTerm} 
+            />
           </TabsContent>
         </Tabs>
       </div>
