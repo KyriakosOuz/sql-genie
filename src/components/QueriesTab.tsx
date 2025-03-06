@@ -1,11 +1,11 @@
+
 import React from 'react';
-import { FileCode, Loader2, Copy, Check } from 'lucide-react';
+import { FileCode, Loader2, Copy, Check, Lightbulb } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Query } from '@/lib/supabase';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useToast } from '@/hooks/use-toast';
+import SqlOptimizationInsights from './SqlOptimizationInsights';
 
 interface QueriesTabProps {
   queries: Query[];
@@ -55,6 +55,7 @@ const QueriesTab: React.FC<QueriesTabProps> = ({ queries, loading, searchTerm })
 const QueryCard = ({ query }: { query: Query }) => {
   const { toast } = useToast();
   const [copied, setCopied] = React.useState(false);
+  const [showInsights, setShowInsights] = React.useState(false);
 
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(query.sql_result);
@@ -76,25 +77,38 @@ const QueryCard = ({ query }: { query: Query }) => {
               {new Date(query.created_at).toLocaleString()}
             </CardDescription>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={copyToClipboard}
-            className="flex items-center gap-1"
-          >
-            {copied ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-            {copied ? 'Copied!' : 'Copy'}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowInsights(!showInsights)}
+              className="flex items-center gap-1"
+            >
+              <Lightbulb className="h-4 w-4" />
+              {showInsights ? 'Hide Insights' : 'Show Insights'}
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={copyToClipboard}
+              className="flex items-center gap-1"
+            >
+              {copied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              {copied ? 'Copied!' : 'Copy'}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-4">
         <pre className="bg-code-background text-code-foreground p-4 rounded-lg overflow-x-auto">
           <code className="font-mono text-sm">{query.sql_result}</code>
         </pre>
+        
+        {showInsights && <SqlOptimizationInsights sql={query.sql_result} />}
       </CardContent>
     </Card>
   );
