@@ -5,6 +5,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import SqlOptimizationInsights from './SqlOptimizationInsights';
+import UnderStructureSection from './UnderStructureSection';
 
 interface SqlOutputProps {
   sql: string;
@@ -49,6 +50,9 @@ const SqlOutput = ({ sql }: SqlOutputProps) => {
       </Card>
       
       {sql && <SqlOptimizationInsights sql={sql} />}
+      
+      {/* Add the Under Structure section after the Generated SQL and optimization insights */}
+      {sql && <UnderStructureSection sql={sql} />}
     </div>
   );
 };
