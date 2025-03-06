@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -118,7 +119,7 @@ const SchemaViewer: React.FC<SchemaViewerProps> = ({ schema }) => {
         </div>
       </CardHeader>
       
-      <CardContent className={`p-0 overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-[5000px]' : 'max-h-0'}`}>
+      <CardContent className={`p-0 overflow-hidden ${isExpanded ? 'h-[400px] overflow-y-auto' : 'h-0'}`}>
         {tables.length > 0 ? (
           <div className="divide-y">
             {tables.map((table, index) => (
@@ -166,7 +167,7 @@ const SchemaTable = ({ table }: { table: { name: string, definition: string } })
       </div>
       
       {isExpanded && (
-        <div className="pt-2 pl-6">
+        <div className="pt-2 pl-6 max-h-[300px] overflow-y-auto">
           <SyntaxHighlighter 
             language="sql" 
             style={vscDarkPlus}
